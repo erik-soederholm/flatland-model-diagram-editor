@@ -26,6 +26,7 @@ class SubsystemVisitor(PTNodeVisitor):
         return name
 
     def visit_class_name(self, node, children):
+        """Class name"""
         name = ''.join(children)
         return {'name': name }
 
@@ -45,8 +46,8 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_subsystem_header(self, node, children):
         """Beginning of sybsystem section"""
-        abbr = None if len(children) == 1 else children[1]
-        return {'subsys_name': children[0], 'abbr': abbr}
+        abbr = None if len(children) == 2 else children[1]
+        return {'subsys_name': children[0], 'abbr': abbr, 'domain_name' : children[-1]}
 
     def visit_body_line(self, node, children):
         """Lines that we don't need to parse yet, but eventually will"""
@@ -101,9 +102,56 @@ class SubsystemVisitor(PTNodeVisitor):
         # TODO: Parse these eventually
         return {"methods": children}
 
+    def visit_navigation(self, node, children):
+        """A reference for a attribute defined as a navigation (only valid if it is unambiguous)"""
+        nav_data = {'ref_name'if node == 'attr_ref_name' else
+                    node if node != 'class_name' else 'class':
+            value[0] if node != 'class_name' else value[0]['name']
+            for node, value in children.results.items()} 
+        return [('nav_rnum', nav_data, True), ('rnum', children.results['rnum'][0], True)]
+        
+    def visit_relrnum(self, node, children):
+        """Relation as it appear in a reference for a attribute"""
+        rnum = children.results['rnum'][0]
+        out = [('rnum', rnum, True)]
+        if 'union' in children.results:
+            out.append(('union_rnum', rnum, True))
+        if 'attr_ref_name' in children.results:
+            out.append(('ref_name', (rnum, children.results['attr_ref_name'][0]), True))
+        return out
+    
+    def visit_id(self, node, children):
+        """id: I, I2, I3"""
+        return ('id', node.value, True)
+
+    def visit_attr_name(self, node, children):
+        """Attribute name"""
+        return ('name', ''.join(children))
+
+    def visit_attr_ref_name(self, node, children):
+        """Name of referred attribute"""
+        return ''.join(children)
+    
+    def visit_type_name(self, node, children):
+        """Type name"""
+        return ('type', ''.join(children))
+
+    def visit_attr(self, node, children):
+        """Attribute inside a class"""
+        out = dict()
+        data_list = [i for child in children for i in (child if type(child) is list else [child])]
+        for data in data_list:
+            (key, value, *pack) = data
+            if not pack:
+                out[key] = value
+            else: 
+                if key not in out:
+                    out[key] = list()
+                out[key].append(value)
+        return out
+
     def visit_attr_block(self, node, children):
         """Attribute text (unparsed)"""
-        # TODO: Parse these eventually
         return {"attributes": children}
 
     def visit_class_set(self, node, children):

@@ -9,7 +9,7 @@ metadata
     Organization : Toyota Research Institute
     Copyright notice > MIT
     Organization logo > Toyota
-subsystem Road
+subsystem Road : Vehicle Guidance
 class Barrier Type
 attributes
     Name : Name {I}
@@ -39,22 +39,22 @@ attributes
 --
 class Dedicated Bike Lane
 attributes
-    Inside division {I,R16}
-    Outside division {I,R16}
-    Road segment {I,R16}
+    Inside division {I, R16}
+    Outside division {I, R16}
+    Road segment {I, R16}
 --
 class Division Transition
 attributes
     ID : Division Transition ID {I}
-    Division {I, R36}
+    Lane Division {I, R36}
     Road segment {I, R36}
     Location : Distance
 --
 class Driving Lane
 attributes
     Inside division {I, R10}
-    Outside division {I,R10}
-    Road segment {I,R10}
+    Outside division {I, R10}
+    Road segment {I, R10}
     Bike sharing : Boolean
 --
 methods
@@ -62,24 +62,24 @@ methods
 --
 class Driving Lane Order
 attributes
-    Number : Driving Lane Number {I,OR34}
-    Inside division {I2,R29}
-    Outsidedivision {I3,R29}
-    LCS {I,I2,I3,R29,OR34}
-    Road segment {I,I2,I3,R29,OR34}
+    Number : Driving Lane Number {I, OR34}
+    Inside division {I2, R29}
+    Outsidedivision {I3, /R29/Driving Lane}
+    LCS {I, I2, I3, R29, OR34}
+    Road segment {I, I2, I3, R29, OR34}
 --
 class End Of Lane
 attributes
     ID {I, R28}
     Inside division {R27}
     Outside division {R27}
-    Road segment {I, R27}
+    Road segment {I, R27, R28}
 --
 class Exclusion Lane
 attributes
     Inside division {I, R16}
-    Outside division {I,R16}
-    Road segment {I,R16}
+    Outside division {I, R16}
+    Road segment {I, R16}
     Traversable : Traversability
 --
 class Flow Separator, FSEP
@@ -103,14 +103,14 @@ attributes
     ID {I}
     Inside division {R25}
     Outsidedivision {R25}
-    Road segment {I,R25}
+    Road segment {I, R25}
     Pedestrian : Boolean
 --
 class Inside Shoulder
 attributes
-    Inside division {I,R33}
-    Outside division {I,R33}
-    Road segment {I,R33,R38}
+    Inside division {I, R33}
+    Outside division {I, R33}
+    Road segment {I, R33, R38}
     Conduit {R38}
 --
 class Known Map Road
@@ -122,17 +122,17 @@ attributes
 --
 class Lane
 attributes
-    Inside division {I, R21}
-    Outside division {I, R21}
-    Road segment {I, R21, R22}
+    Inside division {I, /R21/is outside adjacent to.ID}
+    Outside division {I, /R21/is inside adjacent to.ID}
+    Road segment {I, R21.Road segment, R22}
     Width : Distance
 --
 class Lane Arrangement
 attributes
-    Inside division {I,R40}
-    Outside division {I2,R40}
-    LCS {I,I2,R40}
-    Road segment {I,I2,R40}
+    Inside division {I, R40}
+    Outside division {I2, R40}
+    LCS {I, I2, R40}
+    Road segment {I, I2, R40}
 --
 class Lane Configuration Segment <import:Lane Reconfiguration Subsystem>
 attributes
@@ -167,9 +167,9 @@ attributes
 --
 class Non Driving Lane
 attributes
-    Inside division {I,R10}
-    Outside division {I,R10}
-    Road segment {I,R10}
+    Inside division {I, R10}
+    Outside division {I, R10}
+    Road segment {I, R10}
 --
 class One Way Road Segment
 attributes
@@ -177,9 +177,9 @@ attributes
 --
 class Outside Shoulder
 attributes
-    Inside division {I,R33}
-    Outside division {I,R33}
-    Road segment {I,R33,R39}
+    Inside division {I, R33}
+    Outside division {I, R33}
+    Road segment {I, R33, R39}
     Conduit {R39}
 --
 class Paired Conduit
@@ -189,17 +189,17 @@ attributes
 --
 class Parking Lane
 attributes
-    Inside division {I,R16}
-    Outside division {I,R16}
+    Inside division {I, R16}
+    Outside division {I, R16}
     Road segment {I, R16}
     Orientation : Parking
 --
 class Restricted Driving Lane
 attributes
-    Inside division {I,R11}
-    Outside division {I,R11}
-    Road segment {I,R11}
-    Restriction {Rxx}
+    Inside division {I, R11}
+    Outside division {I, R11}
+    Road segment {I, R11}
+    Restriction {R43}
 --
 class Restriction Specification <import:TBD>
 attributes
@@ -207,11 +207,11 @@ attributes
 --
 class Reverse Paired Conduit
 attributes
-    Road segment {I, R2}
+    Road segment {I, R4}
 --
 class Right Road Edge
 attributes
-    Road segment {I, R24}
+    Road segment {I, R23}
 --
 class Road
 attributes
@@ -221,9 +221,9 @@ attributes
 --
 class Road Edge
 attributes
-    Road segment {I, UR15, R40}
-    Side {I} : Left Right
-    Lane division {R40}
+    Road segment {I, UR15, R41}
+    Side : Left Right {I}
+    Lane division {R41}
 --
 class Road Map Specification, RMAP_SPEC
 attributes
@@ -255,8 +255,8 @@ attributes
 --
 class Shoulder Lane
 attributes
-    Inside division {I,R16}
-    Outside division {I,R16}
+    Inside division {I, R16}
+    Outside division {I, R16}
     Road segment {I, R16}
     Quality : Shoulder Quality
 --
@@ -273,7 +273,7 @@ attributes
     ID {I, R28}
     Inside division {R26}
     Outside division {R26}
-    Road segment {I, R26}
+    Road segment {I, R26, R28}
 --
 class Traffic Territory
 attributes
@@ -297,14 +297,14 @@ attributes
 --
 class Unpaired Conduit
 attributes
-    Road segment {I, R4}
+    Road segment {I, R5}
     Direction : Traffic Direction
 --
 class Unrestricted Driving Lane
 attributes
-    Inside division {I,R11}
+    Inside division {I, R11}
     Outside division {I, R11}
-    Road segment {I,R11}
+    Road segment {I, R11}
 --
 relationships
     R1

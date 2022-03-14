@@ -116,7 +116,27 @@ class XumlClassDiagram:
             no_color=self.no_color,
             color=lspec.color,
         )
-
+        
+    def attribute_list(self, c : dict) -> list:
+        """transforms a set of class attributes into a list of strings"""
+        
+        def textify_attribute(attr_data):
+            """Help function for converting a attribute to a string"""
+            line = attr_data['name']
+            line_list = []
+            if 'type' in attr_data:
+                line += ' : ' +  attr_data['type']
+            if 'id' in attr_data:
+                line_list = [_id for _id in attr_data['id']]
+            if 'rnum' in attr_data:
+                union_list = set(attr_data['union_rnum']) if 'union_rnum' in attr_data else set()
+                line_list += [('U' if rnum in union_list else '') + rnum for rnum in attr_data['rnum']]
+            if len(line_list) > 0:
+                line += ' {' + ', '.join(line_list) + '}'
+            return line
+        
+        return list(map(textify_attribute, c['attributes']))
+    
     def draw_classes(self) -> Dict[str, SingleCellNode]:
         """Draw all of the classes on the class diagram"""
 
@@ -160,7 +180,7 @@ class XumlClassDiagram:
             h_expand = nlayout.get('node_height_expansion', {})
             text_content = [
                 New_Compartment(content=name_block.text, expansion=h_expand.get(1, 0)),
-                New_Compartment(content=c['attributes'] + internal_ref, expansion=h_expand.get(2, 0)),
+                New_Compartment(content=self.attribute_list(c) + internal_ref, expansion=h_expand.get(2, 0)),
             ]
             if c.get('methods'):
                 text_content.append(
