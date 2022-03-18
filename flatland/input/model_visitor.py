@@ -104,11 +104,18 @@ class SubsystemVisitor(PTNodeVisitor):
 
     def visit_navigation(self, node, children):
         """A reference for a attribute defined as a navigation (only valid if it is unambiguous)"""
-        nav_data = {'ref_name'if node == 'attr_ref_name' else
-                    node if node != 'class_name' else 'class':
-            value[0] if node != 'class_name' else value[0]['name']
-            for node, value in children.results.items()} 
-        return [('nav_rnum', nav_data, True), ('rnum', children.results['rnum'][0], True)]
+        out = children.results['relrnum'][0]
+        nav_data = dict()
+        for tagg, data, *flagg in out:
+            if tagg == 'rnum':
+                nav_data['rnum'] = data
+                break
+        for _from, _to in [('phrase', 'phrase'), ('class_name','class'), ('attr_ref_name', 'ref_name')]:
+            if _from in children.results:
+                data = children.results[_from][0]
+                nav_data[_to] = data['name'] if 'name' in data else data
+        out.append(('nav_rnum', nav_data, True))
+        return out
         
     def visit_relrnum(self, node, children):
         """Relation as it appear in a reference for a attribute"""
@@ -116,13 +123,19 @@ class SubsystemVisitor(PTNodeVisitor):
         out = [('rnum', rnum, True)]
         if 'union' in children.results:
             out.append(('union_rnum', rnum, True))
+        if 'constrained' in children.results:
+            out.append(('constrained_rnum', rnum, True))
         if 'attr_ref_name' in children.results:
             out.append(('ref_name', (rnum, children.results['attr_ref_name'][0]), True))
         return out
     
     def visit_id(self, node, children):
         """id: I, I2, I3"""
-        return ('id', node.value, True)
+        _id = children[0]
+        out = [('id', _id, True)]
+        if len(children) == 2:
+            out.append(('constrained_id', _id, True))
+        return out
 
     def visit_attr_name(self, node, children):
         """Attribute name"""
@@ -147,7 +160,8 @@ class SubsystemVisitor(PTNodeVisitor):
             else: 
                 if key not in out:
                     out[key] = list()
-                out[key].append(value)
+                if value not in out[key]:
+                    out[key].append(value)
         return out
 
     def visit_attr_block(self, node, children):

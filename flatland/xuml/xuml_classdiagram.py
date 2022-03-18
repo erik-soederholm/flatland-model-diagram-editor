@@ -127,10 +127,14 @@ class XumlClassDiagram:
             if 'type' in attr_data:
                 line += ' : ' +  attr_data['type']
             if 'id' in attr_data:
-                line_list = [_id for _id in attr_data['id']]
+                constrained_list = set(attr_data['constrained_id']) if 'constrained_id' in attr_data else set()
+                line_list = [_id + ('c' if _id in constrained_list else '') for _id in attr_data['id']]
             if 'rnum' in attr_data:
                 union_list = set(attr_data['union_rnum']) if 'union_rnum' in attr_data else set()
-                line_list += [('U' if rnum in union_list else '') + rnum for rnum in attr_data['rnum']]
+                constrained_list = set(attr_data['constrained_rnum']) if 'constrained_rnum' in attr_data else set()
+                line_list += [('U' if rnum in union_list else '') 
+                              + rnum 
+                              + ('c' if rnum in constrained_list else '') for rnum in attr_data['rnum']]
             if len(line_list) > 0:
                 line += ' {' + ', '.join(line_list) + '}'
             return line
