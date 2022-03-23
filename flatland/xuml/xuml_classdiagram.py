@@ -124,6 +124,8 @@ class XumlClassDiagram:
             """Help function for converting a attribute to a string"""
             line = attr_data['name']
             line_list = []
+            if 'constrained_value' in attr_data:
+                line += ' = ' +  attr_data['constrained_value']
             if 'type' in attr_data:
                 line += ' : ' +  attr_data['type']
             if 'id' in attr_data:

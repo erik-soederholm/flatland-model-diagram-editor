@@ -153,6 +153,10 @@ class SubsystemVisitor(PTNodeVisitor):
         
         return ('ignore', '!')
 
+    def visit_value(self, node, children):
+        """Attribute constrained value """
+        return ('constrained_value', node.value)
+
     def visit_attr(self, node, children):
         """Attribute inside a class"""
         out = dict()
