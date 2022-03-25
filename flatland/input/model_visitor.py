@@ -149,24 +149,37 @@ class SubsystemVisitor(PTNodeVisitor):
         """Type name"""
         return ('type', ''.join(children))
 
+    def visit_ignore(self, node, children):
+        
+        return ('ignore', '!')
+
     def visit_attr(self, node, children):
         """Attribute inside a class"""
         out = dict()
+        category = 'attributes'
         data_list = [i for child in children for i in (child if type(child) is list else [child])]
         for data in data_list:
             (key, value, *pack) = data
             if not pack:
-                out[key] = value
+                if key == 'ignore':
+                    category = 'ignore attributes'
+                else:
+                    out[key] = value
             else: 
                 if key not in out:
                     out[key] = list()
                 if value not in out[key]:
                     out[key].append(value)
-        return out
+        return (category, out)
 
     def visit_attr_block(self, node, children):
         """Attribute text (unparsed)"""
-        return {"attributes": children}
+        out = dict()
+        for key, value in children:
+            if key not in out:
+                out[key] = []
+            out[key].append(value)
+        return out
 
     def visit_class_set(self, node, children):
         """All of the classes"""
