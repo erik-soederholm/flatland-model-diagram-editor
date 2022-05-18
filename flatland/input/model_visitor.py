@@ -123,6 +123,8 @@ class SubsystemVisitor(PTNodeVisitor):
         out = [('rnum', rnum, True)]
         if 'union' in children.results:
             out.append(('union_rnum', rnum, True))
+        if 'ranking' in children.results:
+            out.append(('ranking_rnum', rnum, True))
         if 'constrained' in children.results:
             out.append(('constrained_rnum', rnum, True))
         if 'attr_ref_name' in children.results:
