@@ -74,7 +74,7 @@ class XumlClassDiagram:
 
         # Draw all of the classes
         self.logger.info("Drawing the classes")
-        self.nodes = self.draw_classes()
+        self.nodes, self.node2class = self.draw_classes()
 
         # If there are any relationships, draw them
         if self.subsys.rels and not nodes_only:
@@ -121,6 +121,8 @@ class XumlClassDiagram:
         """Draw all of the classes on the class diagram"""
 
         nodes = {}
+        node2class = {}
+        
         np = self.layout.node_placement # Layout data for all classes
 
         for c in self.subsys.classes:
@@ -184,6 +186,7 @@ class XumlClassDiagram:
                 # But if a node is duplicated, i will not be 0 and we add a suffix to the node
                 # name for the additional cplace
                 node_name = cname if i == 0 else f'{cname}_{i+1}'
+                node2class[node_name] = cname          
                 same_subsys_import = True if not import_subsys_name and i > 0 else False
                 # first placement (i==0) may or may not be an imported class
                 # But all additional placements must be imported
@@ -215,7 +218,7 @@ class XumlClassDiagram:
                         local_alignment=Alignment(vertical=v, horizontal=h),
                         expansion=w_expand,
                     )
-        return nodes
+        return nodes, node2class
         # TODO:  Add support for axis offset on stem names
 
     def draw_association(self, rnum, association, binary_layout):
@@ -227,7 +230,7 @@ class XumlClassDiagram:
         astem = binary_layout.get('tertiary_node', None)
 
         t_side = association['t_side']
-        if tstem['node_ref'] != t_side['cname']:
+        if self.node2class.get(tstem['node_ref'], '') != t_side['cname']:
             # The user put the tstems in the wrong order in the layout file
             # Swap them
             # The node_ref is a list and the first element refers to the model class name
@@ -241,6 +244,10 @@ class XumlClassDiagram:
             side=tstem['stem_dir'], axis_offset=None, end_offset=None
         )
         node_ref = tstem['node_ref']
+        if t_side['cname'] != self.node2class.get(node_ref, node_ref):
+            self.logger.error(f"In model binary class of {rnum} class [{t_side['cname']}] is not defined in layout")
+            sys.exit(1)
+        
         t_stem = New_Stem(stem_type='class mult', semantic=t_side['mult'] + ' mult',
                           node=self.nodes[node_ref], face=tstem['face'],
                           anchor=tstem.get('anchor', None), stem_name=t_phrase)
@@ -252,6 +259,10 @@ class XumlClassDiagram:
             side=pstem['stem_dir'], axis_offset=None, end_offset=None
         )
         node_ref = pstem['node_ref']
+        if p_side['cname'] != self.node2class.get(node_ref, node_ref):
+            self.logger.error(f"In model binary class of {rnum} class [{p_side['cname']}] is not defined in layout")
+            sys.exit(1)
+            
         try:
             pnode = self.nodes[node_ref]
         except KeyError:
@@ -264,6 +275,10 @@ class XumlClassDiagram:
         # There is an optional stem for an association class
         if astem:
             node_ref = astem['node_ref']
+            if association['assoc_cname'] != self.node2class.get(node_ref, node_ref):
+                self.logger.error(f"In model association class of {rnum} class [{association['assoc_cname']}] is not defined in layout")
+                sys.exit(1)
+                
             try:
                 semantic = association['assoc_mult'] + ' mult'
             except KeyError:
@@ -372,6 +387,25 @@ class XumlClassDiagram:
         """
         trunk_layout = tree_layout['trunk_face']
         node_ref = trunk_layout['node_ref']
+        
+        # Error check that generalization and tree_layout do not differ
+        if self.node2class.get(node_ref, node_ref) != generalization['superclass']:
+            self.logger.error(f"In layout sheet superclass of {rnum} class [{self.node2class[node_ref]}] is not defined in model")
+            sys.exit(1)
+        
+        all_leaf_faces = {self.node2class.get(node, node) for brach in tree_layout['branches'] 
+                                for node in brach['leaf_faces'].keys()}
+        
+        for leaf_face in all_leaf_faces:
+            if leaf_face not in generalization['subclasses']:
+                self.logger.error(f"In layout sheet subclass of {rnum} class [{leaf_face}] is not defined in model")
+                sys.exit(1)
+        
+        for subclass in generalization['subclasses']:
+            if subclass not in all_leaf_faces:
+                self.logger.error(f"In model subclass of {rnum} class [{subclass}] is not defined in layout")
+                sys.exit(1)
+            
         trunk_node = self.nodes[node_ref]
 
         # Process trunk branch
