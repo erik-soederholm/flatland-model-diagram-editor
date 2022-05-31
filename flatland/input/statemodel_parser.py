@@ -95,7 +95,9 @@ class StateModelParser:
         states = result.results.get('state_block')
         # You can draw classes without rels, but not the other way around!
         return StateModel(
-            domain=domain, lifecycle=lifecycle, assigner=assigner,
+            domain=domain[0], 
+            lifecycle=lifecycle[0] if lifecycle else None, 
+            assigner=assigner[0] if assigner else None,
             events={} if not events else events[0],
             states=states,
             metadata=None if not metadata else metadata[0]
